@@ -8,6 +8,7 @@ import controlador.Controlador;
 import modelo.Equipo;
 import modelo.Partido;
 import modelo.Torneo;
+import modelo.Usuario;
 
 /**
  *

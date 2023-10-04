@@ -1,4 +1,3 @@
-
 package controlador;
 
 import futbol.Futbol;
@@ -14,11 +13,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -29,6 +30,7 @@ import javax.swing.text.DefaultCaret;
 import modelo.Equipo;
 import modelo.Partido;
 import modelo.Torneo;
+import modelo.Usuario;
 import vista.*;
 
 /**
@@ -55,12 +57,20 @@ public class Controlador {
         ventana.botonAgregar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 Equipo equipo = new Equipo(ventana.jTextField1.getText(), srcImagen);
+                for (var equipoL : Torneo.getEquipos()) {
+                    if (equipo.getIdentifier().equals(equipoL.getIdentifier())) {
+
+                        ventana.jLabel4.setText("El equipo ya existe");
+                        return;
+                    }
+                }
+
                 Torneo.agregarEquipo(equipo);
                 actualizarTabla();
                 ventana.dispose();
                 srcImagen = "src/Datos/Imagenes/default.png";
-
             }
         });
     }
@@ -151,6 +161,7 @@ public class Controlador {
                     Equipo Visitante = Torneo.getEquipoByName(ventana.selectorVisitante.getSelectedItem().toString());
                     int golesLocal = Integer.parseInt(ventana.inputGolesLocal.getText());
                     int golesVisitante = Integer.parseInt(ventana.inputGolesVisitante.getText());
+
                     Torneo.agregarPartido(new Partido(Local, Visitante, golesLocal, golesVisitante));
                     actualizarTabla();
                     ventana.dispose();
@@ -160,15 +171,34 @@ public class Controlador {
 
         ventana.show();
     }
-    
-    public void mostrarLogin(){
-        login.jButton1.addActionListener(new ActionListener(){
+
+    int contadorLogin = 0;
+
+    public void mostrarLogin() {
+        var usuarios = Usuario.cargarUsuarios();
+
+        login.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        login.jButton1.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e){
-                mostrarVistaPrincipal();
+            public void actionPerformed(ActionEvent e) {
+                for (var usuario : usuarios) {
+                    if (login.jTextField1.getText().equals(usuario.getNombre()) && login.jPasswordField1.getText().equals(usuario.getContrasena())) {
+                        if (usuario.getTipo() == 1) {
+                            principal.botonNuevoEquipo.hide();
+                            principal.botonNuevoPartido.hide();
+                        }
+                        mostrarVistaPrincipal();
+                        return;
+                    }
+                }
+                login.jLabel6.setText("Datos incorrectos");
+                contadorLogin++;
+                if (contadorLogin >= 3) {
+                    login.dispose();
+                }
             }
         });
-        
+
         login.show();
     }
 
@@ -212,18 +242,16 @@ public class Controlador {
         Torneo.guardarEquipos();
         Torneo.guardarPartidos();
         principal.jTable1.setModel(modelo);
-       
-        
+
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(modelo);
         principal.jTable1.setRowSorter(sorter);
         Comparator<Integer> puntosComparator = (p1, p2) -> p2 - p1; // Orden descendente
 
         sorter.setComparator(4, puntosComparator); // La columna de "Puntos" es la quinta (0-indexed)
-        JPanel frame = new JPanel();
-        JPanel panels = new JPanel();
-        JScrollPane scrPane = new JScrollPane(panels);
-        scrPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        frame.add(scrPane);
+
+        JPanel pane = new JPanel();
+        pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
+
         for (Partido partido : Torneo.getPartidos()) {
             try {
 
@@ -243,17 +271,19 @@ public class Controlador {
                 BufferedImage imagen2 = ImageIO.read(new File(partido.getVisitante().getRutaEscudo()));
                 ImageIcon icono2 = new ImageIcon(imagen2);
                 img2.setIcon(icono2);
-                
-                
+
                 panel.add(img1);
                 panel.add(texto);
                 panel.add(img2);
-                principal.jPanel4.add(panel);
-                principal.jPanel4.add(new Label(""));
-                principal.jPanel4.setLayout(new BoxLayout(principal.jPanel4, BoxLayout.Y_AXIS));
+                panel.add(new Label(""));
+                pane.add(panel);
 
             } catch (Exception e) {
             }
         }
+        principal.jScrollPane2.validate();
+        principal.jScrollPane2.repaint();
+        principal.jScrollPane2.setViewportView(pane);
+
     }
 }
