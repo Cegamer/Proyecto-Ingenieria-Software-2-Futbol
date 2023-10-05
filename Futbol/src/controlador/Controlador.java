@@ -24,6 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.text.DefaultCaret;
@@ -159,12 +160,18 @@ public class Controlador {
                 } else {
                     Equipo Local = Torneo.getEquipoByName(ventana.selectorLocal.getSelectedItem().toString());
                     Equipo Visitante = Torneo.getEquipoByName(ventana.selectorVisitante.getSelectedItem().toString());
-                    int golesLocal = Integer.parseInt(ventana.inputGolesLocal.getText());
-                    int golesVisitante = Integer.parseInt(ventana.inputGolesVisitante.getText());
+                    try {
+                        int golesLocal = Integer.parseInt(ventana.inputGolesLocal.getText());
+                        int golesVisitante = Integer.parseInt(ventana.inputGolesVisitante.getText());
 
-                    Torneo.agregarPartido(new Partido(Local, Visitante, golesLocal, golesVisitante));
-                    actualizarTabla();
-                    ventana.dispose();
+                        Torneo.agregarPartido(new Partido(Local, Visitante, golesLocal, golesVisitante));
+                        actualizarTabla();
+                        ventana.dispose();
+                    }
+                    catch(Exception ex){
+                        ventana.errorLabel.setText("Error en Datos");
+                    }
+
                 }
             }
         });
@@ -188,11 +195,12 @@ public class Controlador {
                             principal.botonNuevoPartido.hide();
                         }
                         mostrarVistaPrincipal();
+                        login.dispose();
                         return;
                     }
                 }
-                login.jLabel6.setText("Datos incorrectos");
                 contadorLogin++;
+                login.jLabel6.setText("Datos incorrectos, tienes " + (3 - contadorLogin) + " intentos");
                 if (contadorLogin >= 3) {
                     login.dispose();
                 }
@@ -251,17 +259,21 @@ public class Controlador {
 
         JPanel pane = new JPanel();
         pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
+        pane.setBackground(Color.white);
+        JLabel texto1 = new JLabel("MARCADORES");
+        texto1.setSize(50, 50);
+        texto1.setBorder(new EmptyBorder(10, 0, 10, 130));
 
+        pane.add(texto1);
         for (Partido partido : Torneo.getPartidos()) {
             try {
 
                 JPanel panel = new JPanel();
                 panel.setLayout(new FlowLayout()); // Usa un layout apropiado
                 JLabel texto = new JLabel(partido.getLocal().getNombre() + " " + partido.getGolesLocal() + " VS " + partido.getGolesVisitante() + " " + partido.getVisitante().getNombre());
-
                 panel.setSize(400, 100);
-                panel.setBackground(Color.red);
-
+                panel.setBackground(Color.white);
+                panel.setBorder(new EmptyBorder(10, 0, 10, 0));
                 JLabel img1 = new JLabel("");
                 BufferedImage imagen = ImageIO.read(new File(partido.getLocal().getRutaEscudo()));
                 ImageIcon icono = new ImageIcon(imagen);
@@ -285,5 +297,11 @@ public class Controlador {
         principal.jScrollPane2.repaint();
         principal.jScrollPane2.setViewportView(pane);
 
+    }
+
+    private static class JLabel1 {
+
+        public JLabel1() {
+        }
     }
 }
